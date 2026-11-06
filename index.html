@@ -132,16 +132,21 @@ body.night .ov{background:rgba(5,5,25,.5)}
 /* touch and narrow screens: dock at the bottom, controls slide up as a sheet */
 @media (max-width:1180px),(pointer:coarse){
   .dock{display:grid}
-  .sheet{left:50%;right:auto;top:calc(max(14px,env(safe-area-inset-top)) + 84px);bottom:auto;width:min(640px,calc(100% - 32px));transform:translateX(-50%);
-    max-height:calc(100dvh - max(14px,env(safe-area-inset-top)) - 84px - env(safe-area-inset-bottom) - 104px);border-radius:24px;padding:4px 18px 16px;display:none;background:var(--panel-solid)}
-  body.open .sheet{display:block;animation:pop var(--motion-fast) var(--motion-ease)}
-  @keyframes pop{from{opacity:0;transform:translateX(-50%) scale(.98)}}
+  /* closed: art gets the whole screen. open: controls dock to the left and the art shrinks beside them, so edits show live */
+  .sheet{display:none;width:min(var(--sheet),44vw);bottom:calc(env(safe-area-inset-bottom) + 92px);background:var(--panel-solid)}
+  body.open .sheet{display:block}
   .stage{padding:calc(max(14px,env(safe-area-inset-top)) + 92px) 16px calc(env(safe-area-inset-bottom) + 100px)}
+  body.open .stage{padding-left:calc(min(var(--sheet),44vw) + 32px)}
+  .sheet .secs{display:block!important}
   .sheet .secs{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));column-gap:22px}
   .sec{border-bottom:1px solid var(--line)}
   select,input[type=text],.sheet button{height:44px}
 }
-@media (max-width:640px){.chip .t{display:none}.brand{max-width:46vw}.brand b{font-size:17px}}
+@media (max-width:640px){
+  /* phones: art on top, controls underneath, both visible at once */
+  body.open .sheet{left:12px;right:12px;width:auto;top:44vh;bottom:calc(env(safe-area-inset-bottom) + 86px)}
+  body.open .stage{padding:calc(max(14px,env(safe-area-inset-top)) + 80px) 12px calc(56vh + 6px) 12px}
+  .chip .t{display:none}.brand{max-width:46vw}.brand b{font-size:17px}}
 </style>
 </head>
 <body>
@@ -2308,7 +2313,7 @@ function init(){
   loadFavs();$('fav').onclick=toggleFav;$('gal').onclick=()=>openGal(false);$('ovx').onclick=closeGal;$('ov').onclick=e=>{if(e.target===$('ov'))closeGal();};
   $('tabx').onclick=()=>tab('x');$('tabf').onclick=()=>tab('f');$('tabp').onclick=()=>tab('p');$('shuf').onclick=shuffle;$('bkpdf').onclick=()=>runBook('pdf');$('bkzip').onclick=()=>runBook('zip');
   $('fxp').onclick=exportFavs;$('fim').onclick=()=>$('fif').click();$('fif').onchange=e=>{const f=e.target.files[0];if(f)importFavs(f);e.target.value='';};
-  const sheet=o=>{o=document.body.classList.toggle('open',o);$('moreb').setAttribute('aria-expanded',o);$('moreb').querySelector('span').textContent=o?'Done':'Controls';};
+  const sheet=o=>{o=document.body.classList.toggle('open',o);$('moreb').setAttribute('aria-expanded',o);$('moreb').querySelector('span').textContent=o?'Done':'Controls';fit();};
   $('moreb').onclick=()=>sheet();$('stage').onclick=()=>{if(document.body.classList.contains('open'))sheet(false);};
   $('surprise').onclick=()=>{const ic=$('surprise').querySelector('svg');ic.classList.remove('spin');void ic.offsetWidth;ic.classList.add('spin');$('reroll').click();};
   const night=on=>{document.body.classList.toggle('night',on);$('theme').setAttribute('aria-label',on?'Switch to day':'Switch to night');
