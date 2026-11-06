@@ -132,12 +132,11 @@ body.night .ov{background:rgba(5,5,25,.5)}
 /* touch and narrow screens: dock at the bottom, controls slide up as a sheet */
 @media (max-width:1180px),(pointer:coarse){
   .dock{display:grid}
-  .sheet{left:50%;right:auto;top:auto;bottom:0;width:min(600px,100%);transform:translate(-50%,105%);max-height:min(62vh,640px);border-radius:28px 28px 0 0;
-    padding:4px 18px calc(env(safe-area-inset-bottom) + 96px);transition:transform var(--motion-slow) var(--motion-ease),background .8s;background:var(--panel-solid)}
-  body.open .sheet{transform:translate(-50%,0)}
-  .grab{display:block;width:44px;height:5px;border-radius:5px;background:var(--line);margin:6px auto 2px}
-  .stage{padding:calc(max(14px,env(safe-area-inset-top)) + 92px) 16px calc(env(safe-area-inset-bottom) + 100px);transition:padding var(--motion-slow) var(--motion-ease)}
-  body.open .stage{padding-bottom:calc(min(62vh,640px) + 8px)}
+  .sheet{left:50%;right:auto;top:calc(max(14px,env(safe-area-inset-top)) + 84px);bottom:auto;width:min(640px,calc(100% - 32px));transform:translateX(-50%);
+    max-height:calc(100dvh - max(14px,env(safe-area-inset-top)) - 84px - env(safe-area-inset-bottom) - 104px);border-radius:24px;padding:4px 18px 16px;display:none;background:var(--panel-solid)}
+  body.open .sheet{display:block;animation:pop var(--motion-fast) var(--motion-ease)}
+  @keyframes pop{from{opacity:0;transform:translateX(-50%) scale(.98)}}
+  .stage{padding:calc(max(14px,env(safe-area-inset-top)) + 92px) 16px calc(env(safe-area-inset-bottom) + 100px)}
   .sheet .secs{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));column-gap:22px}
   .sec{border-bottom:1px solid var(--line)}
   select,input[type=text],.sheet button{height:44px}
@@ -2309,7 +2308,7 @@ function init(){
   loadFavs();$('fav').onclick=toggleFav;$('gal').onclick=()=>openGal(false);$('ovx').onclick=closeGal;$('ov').onclick=e=>{if(e.target===$('ov'))closeGal();};
   $('tabx').onclick=()=>tab('x');$('tabf').onclick=()=>tab('f');$('tabp').onclick=()=>tab('p');$('shuf').onclick=shuffle;$('bkpdf').onclick=()=>runBook('pdf');$('bkzip').onclick=()=>runBook('zip');
   $('fxp').onclick=exportFavs;$('fim').onclick=()=>$('fif').click();$('fif').onchange=e=>{const f=e.target.files[0];if(f)importFavs(f);e.target.value='';};
-  const sheet=o=>{o=document.body.classList.toggle('open',o);$('moreb').setAttribute('aria-expanded',o);$('moreb').querySelector('span').textContent=o?'Done':'Controls';setTimeout(fit,360);};
+  const sheet=o=>{o=document.body.classList.toggle('open',o);$('moreb').setAttribute('aria-expanded',o);$('moreb').querySelector('span').textContent=o?'Done':'Controls';};
   $('moreb').onclick=()=>sheet();$('stage').onclick=()=>{if(document.body.classList.contains('open'))sheet(false);};
   $('surprise').onclick=()=>{const ic=$('surprise').querySelector('svg');ic.classList.remove('spin');void ic.offsetWidth;ic.classList.add('spin');$('reroll').click();};
   const night=on=>{document.body.classList.toggle('night',on);$('theme').setAttribute('aria-label',on?'Switch to day':'Switch to night');
