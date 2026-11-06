@@ -1,5 +1,5 @@
 // Offline cache for Iso Pattern Forge. Bump VERSION on every deploy.
-const VERSION = 'forge-v1';
+const VERSION = 'forge-v2';
 const CORE = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
 const FONTS = 'forge-fonts';
 

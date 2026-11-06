@@ -1,6 +1,6 @@
 # Iso Pattern Forge
 
-A seeded generator of geometric line art made for colouring in Procreate (ColorDrop) or on paper.
+A cozy, seeded generator of geometric line art made for colouring in Procreate (ColorDrop) or on paper.
 Black lines on white, every region closed, same seed gives the same drawing every time.
 
 **Live:** https://dalecri.github.io/procreate-generator/
