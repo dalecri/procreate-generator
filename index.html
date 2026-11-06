@@ -191,8 +191,9 @@ body.night .ov{background:rgba(5,5,25,.5)}
   <div class="grp"><label for="canvas">Canvas</label><select id="canvas">
       <option value="classic">Classic 10:13</option><option value="letter">Letter 8.5x11</option><option value="a4">A4</option><option value="portrait">Portrait 4:5</option><option value="square">Square 1:1</option><option value="story">Story 9:16</option><option value="landscape">Landscape 4:3</option></select></div></div>
  <div class="sec"><h3><span class="dot"></span>Take it home</h3>
-  <div class="exp" id="expgrp"><button class="acc" id="png" title="PNG at 3x on white"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 20h14"/></svg>PNG</button><button id="pngl" title="Transparent PNG, lines only: use as a Procreate reference layer">Lines PNG</button><button id="svg">SVG</button><button id="sw" title="Current palette as a Procreate .swatches file">.swatches</button></div>
-  <p class="hint">Lines PNG goes on its own layer in Procreate, set as Reference, so ColorDrop fills underneath it.</p></div>
+  <div class="exp" id="expgrp"><button class="acc" id="png" title="PNG at 3x on white"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 20h14"/></svg>PNG</button><button id="pngl" title="Transparent PNG, lines only: use as a Procreate reference layer">Lines PNG</button><button id="svg">SVG</button><button id="sw" title="Current palette as a Procreate .swatches file">.swatches</button><button id="pngn" hidden title="Transparent PNG with only the numbers: put it on top of the lines layer in Procreate">Numbers PNG</button></div>
+  <p class="hint" id="hintl">Lines PNG goes on its own layer in Procreate, set as Reference, so ColorDrop fills underneath it.</p>
+  <p class="hint" id="hintn" hidden>Colour by number in Procreate: import Lines PNG (set it as Reference), add a layer below it to colour on, then import Numbers PNG on top. ColorDrop only sees the lines, so the numbers never block a fill. Hide the numbers layer when you're done.</p></div>
  </div>
 </aside>
 <div class="toast" id="toast" hidden><span id="toastt"></span><button id="toastb" class="acc" hidden>Share</button><button id="toastx" aria-label="Dismiss">×</button></div>
@@ -217,7 +218,7 @@ body.night .ov{background:rgba(5,5,25,.5)}
         <select id="pkz" aria-label="Page size"><option value="letter">Letter</option><option value="a4">A4</option></select>
         <select id="pkd" aria-label="Detail"><option value="full">Full detail</option><option value="simple">Simple</option><option value="kids">Kids</option></select>
         <label class="tog"><input id="pkb" type="checkbox"> Numbers</label></div>
-      <div class="ovt"><button id="pkpdf" class="acc">Build pack PDF</button><button id="pkm">Listing mockups</button><button id="pkc">Copy listing text</button><span class="lbl" id="pkst"></span></div>
+      <div class="ovt"><button id="pkpdf" class="acc">Build pack PDF</button><button id="pkl" title="For Procreate buyers: lines PNG per page, numbers PNG when Numbers is on, plus the palette as .swatches">Procreate layers (zip)</button><button id="pkm">Listing mockups</button><button id="pkc">Copy listing text</button><span class="lbl" id="pkst"></span></div>
       <div class="pkwrap"><div class="grid" id="gp"></div><textarea id="pkx" spellcheck="false" aria-label="Etsy listing text"></textarea></div></div>
   </div>
 </div>
@@ -2021,7 +2022,7 @@ function writeURL(){
 function syncControls(){
   $('mode').value=state.mode;$('seed').value=state.seed;$('cx').value=state.c;$('cxv').textContent=state.c;
   $('sym').value=state.sym;$('sym').disabled=NOSYM.includes(state.mode);$('ttl').value=state.title;$('plate').value=state.plate;$('canvas').value=state.canvas;if(typeof syncFav==='function'&&$('fav'))syncFav();$('sym').options[2].textContent=FIELD_MODES.includes(state.mode)?'Radial':TOP_MODES.includes(state.mode)?'Rotational':'3-fold';
-  $('lw').value=state.lw;$('lwv').textContent=state.lw;$('fill').checked=state.fill;$('pal').value=state.pal;$('pal').disabled=!state.fill&&!state.n;$('det').value=state.d;$('num').checked=state.n;
+  $('lw').value=state.lw;$('lwv').textContent=state.lw;$('fill').checked=state.fill;$('pal').value=state.pal;$('pal').disabled=!state.fill&&!state.n;$('det').value=state.d;$('num').checked=state.n;$('pngn').hidden=!state.n;$('hintn').hidden=!state.n;
 }
 function fit(){
   const svg=$('art').firstElementChild;if(!svg)return;
@@ -2077,7 +2078,7 @@ function renderCanvas(G,st,S,lines){
   for(const op of G.ops)drawOp(ctx,op,pal,st,lines);
   ctx.restore();
   ctx.lineWidth=strokeW(st,1)*1.25;ctx.strokeRect(A.fx,A.fy,A.fw,A.fh);
-  if(st.n&&G.nums)for(const op of G.nums)drawOp(ctx,op,null,st,lines);
+  if(st.n&&G.nums&&!lines)for(const op of G.nums)drawOp(ctx,op,null,st,lines);
   const K=keyOn(G,st);
   if(st.plate!=='none'){ctx.strokeRect(A.px,A.py,A.pw,A.ph);if(!K)for(const op of G.caption)drawOp(ctx,op,pal,st,lines);
     else for(const it of G.key){ctx.fillStyle=it.c;ctx.fillRect(it.x,it.y,it.w,it.w);ctx.lineWidth=1.5;ctx.strokeRect(it.x,it.y,it.w,it.w);
@@ -2117,6 +2118,12 @@ function prepare(G,st){
     nums.push({k:'text',x:(x0+r.best%W+.5)/S,y:(y0+Math.floor(r.best/W)+.5)/S,s:n,fs:Math.round(fs*10)/10,b:false,g:1});}
   const idx=[...used].sort((a,b)=>a-b),w=24,gap=12,kx=A.px+A.pw-20-idx.length*(w+gap)+gap,ky=A.py+(A.ph-w-15)/2-4;
   G.key=idx.map((k,i)=>({x:kx+i*(w+gap),y:ky,w,c:pal[k],n:k+1}));G.nums=nums;G.numTag=tag;useArt(current||G);return G;}
+// transparent layer holding only the numbers, same size and position as the other PNGs
+function renderNumbers(G,st,S){useArt(G);const A=ART,cv=document.createElement('canvas');cv.width=Math.round(A.W*S);cv.height=Math.round(A.H*S);
+  const ctx=cv.getContext('2d');ctx.setTransform(S,0,0,S,0,0);if(G.nums)for(const op of G.nums)drawOp(ctx,op,null,st,true);return cv;}
+async function exportNumbers(){if(!state.n)return;const btn=$('pngn'),lab=btn.textContent;btn.disabled=true;btn.textContent='Rendering...';
+  try{await fontsReady();prepare(current,state);const cv=renderNumbers(current,state,3);const blob=await new Promise(r=>cv.toBlob(r,'image/png'));deliver(blob,fileBase()+'-numbers.png');}
+  finally{btn.disabled=false;btn.textContent=lab;}}
 async function fontsReady(){try{await document.fonts.load('700 34px "Space Mono"');await document.fonts.load('400 13px "Space Mono"');}catch(e){}}
 async function exportPNG(lines){
   const btn=$(lines?'pngl':'png'),lab=btn.textContent;btn.disabled=true;btn.textContent='Rendering...';
@@ -2139,9 +2146,7 @@ function makeZip(files){ // files: [{name, data:Uint8Array}]
 // ---------- Procreate .swatches (zip holding Swatches.json, colours in HSB 0..1) ----------
 function hexHSB(h){const r=parseInt(h.slice(1,3),16)/255,g=parseInt(h.slice(3,5),16)/255,b=parseInt(h.slice(5,7),16)/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn;
   let hu=0;if(d){if(mx===r)hu=((g-b)/d)%6;else if(mx===g)hu=(b-r)/d+2;else hu=(r-g)/d+4;hu/=6;if(hu<0)hu+=1;}return {hue:hu,saturation:mx?d/mx:0,brightness:mx,alpha:1,colorSpace:0};}
-function exportSwatches(){const P=PALETTES[state.pal],cols=P.c.concat(['#000000','#ffffff']);
-  const json=JSON.stringify([{name:'Iso Forge · '+P.name,swatches:cols.map(hexHSB)}]);
-  deliver(makeZip([{name:'Swatches.json',data:new TextEncoder().encode(json)}]),P.name.replace(/[^a-z0-9]+/gi,'-')+'.swatches');}
+function exportSwatches(){deliver(swatchesBlob(state.pal),PALETTES[state.pal].name.replace(/[^a-z0-9]+/gi,'-')+'.swatches');}
 
 // ---------- favourites ----------
 const FKEY='isoforge-favs',SNAP=['mode','seed','c','sym','lw','fill','pal','canvas','plate','title','d','n'];let favs=[];
@@ -2217,12 +2222,13 @@ async function buildBatch(items,report){const files=[],enc=new TextEncoder();awa
   for(let i=0;i<items.length;i++){const st=items[i];report('Rendering '+(i+1)+' of '+items.length+'…');const G=generate(st);prepare(G,st);const base=String(i+1).padStart(2,'0')+'-isopattern-'+st.mode+'-'+String(st.seed).replace(/[^a-z0-9_-]+/gi,'-').slice(0,40);
     files.push({name:base+'.svg',data:enc.encode('<?xml version="1.0" encoding="UTF-8"?>\n'+buildSVG(G,st))});
     for(const ln of [false,true]){const cv=renderCanvas(G,st,3,ln),b=await new Promise(r=>cv.toBlob(r,'image/png'));files.push({name:base+(ln?'-lines':'')+'.png',data:new Uint8Array(await b.arrayBuffer())});}
+    if(st.n){const b=await new Promise(r=>renderNumbers(G,st,3).toBlob(r,'image/png'));files.push({name:base+'-numbers.png',data:new Uint8Array(await b.arrayBuffer())});}
     await new Promise(r=>setTimeout(r,0));}
   useArt(current);report('Packing zip…');return makeZip(files);}
 async function runBook(kind){const btn=$(kind==='pdf'?'bkpdf':'bkzip'),items=favs.slice(0,60);if(!items.length)return;btn.disabled=true;const rep=t=>$('bkst').textContent=t;
   try{const title=($('bkt').value||'').trim()||'Iso Pattern Forge';
     if(kind==='pdf'){const b=await buildPDF($('bkn').checked?items.map(st=>({...st,n:true})):items,title,$('bks').value,$('bkc').checked,rep);deliver(b,title.replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'').toLowerCase()+'.pdf');rep('PDF ready: '+items.length+' pages'+($('bkc').checked?' + cover':'')+'.');}
-    else{const b=await buildBatch(items,rep);deliver(b,'isopattern-favourites.zip');rep('Zip ready: '+items.length+' patterns (PNG, lines PNG, SVG each).');}}
+    else{const nb=$('bkn').checked,b=await buildBatch(nb?items.map(st=>({...st,n:true})):items,rep);deliver(b,'isopattern-favourites.zip');rep('Zip ready: '+items.length+' patterns (PNG, lines PNG'+(nb?', numbers PNG':'')+', SVG each).');}}
   catch(e){rep('Something went wrong: '+e.message);}finally{btn.disabled=false;useArt(current);}}
 
 // ---------- side-income pack kit ----------
@@ -2255,6 +2261,21 @@ function showPack(){const pk=packItems();packCache=pk;$('pkx').value=packText(pk
   thumbs(pk.items,$('gp'),st=>{pick(st);});}
 async function packPDF(){const pk=packItems(),btn=$('pkpdf');btn.disabled=true;const rep=t=>$('pkst').textContent=t;
   try{const b=await buildPDF(pk.items,pk.P.name,$('pkz').value,true,rep);deliver(b,pk.P.name.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+pk.seed.replace(/[^a-z0-9]+/gi,'')+'.pdf');rep('Pack PDF ready: '+pk.items.length+' pages + cover.');}
+  catch(e){rep('Something went wrong: '+e.message);}finally{btn.disabled=false;useArt(current);}}
+function swatchesBlob(k){const P=PALETTES[k],cols=P.c.concat(['#000000','#ffffff']);
+  return makeZip([{name:'Swatches.json',data:new TextEncoder().encode(JSON.stringify([{name:'Iso Forge · '+P.name,swatches:cols.map(hexHSB)}]))}]);}
+async function swatchesZip(k){return {name:PALETTES[k].name.replace(/[^a-z0-9]+/gi,'-')+'.swatches',data:new Uint8Array(await swatchesBlob(k).arrayBuffer())};}
+async function packLayers(){const pk=packItems(),btn=$('pkl');btn.disabled=true;const rep=t=>$('pkst').textContent=t;
+  try{await fontsReady();const files=[],pad=n=>String(n).padStart(2,'0'),slug=pk.P.name.toLowerCase().replace(/[^a-z0-9]+/g,'-');
+    for(let i=0;i<pk.items.length;i++){const st=pk.items[i];rep('Layer '+(i+1)+' of '+pk.items.length+'…');const G=generate(st);prepare(G,st);
+      const put=async(cv,nm)=>{const b=await new Promise(r=>cv.toBlob(r,'image/png'));files.push({name:'page-'+pad(i+1)+'/'+nm,data:new Uint8Array(await b.arrayBuffer())});};
+      await put(renderCanvas(G,st,3,true),pad(i+1)+'-lines.png');if(st.n)await put(renderNumbers(G,st,3),pad(i+1)+'-numbers.png');await new Promise(r=>setTimeout(r,0));}
+    files.push(await swatchesZip(pk.pal));
+    files.push({name:'HOW-TO-PROCREATE.txt',data:new TextEncoder().encode(['How to colour these pages in Procreate','',
+      '1. Make a new canvas (for example 3000 x 3900 px) and import NN-lines.png (Actions > Add > Insert a photo).','2. In the Layers panel, tap the lines layer and turn on Reference.',
+      '3. Add a new layer underneath the lines and colour on it. ColorDrop fills up to the lines.',pk.items[0].n?'4. Import NN-numbers.png on top as a guide. Hide it when you are done.':'',
+      '','Tap the .swatches file to add the palette to Procreate.'].join('\r\n'))});
+    deliver(makeZip(files),slug+'-procreate-layers.zip');rep('Procreate layers ready: '+pk.items.length+' pages.');}
   catch(e){rep('Something went wrong: '+e.message);}finally{btn.disabled=false;useArt(current);}}
 function pageCanvas(st,S){const G=generate(st);prepare(G,st);return renderCanvas(G,st,S,false);}
 function shadowed(ctx,cv,x,y,w,h,rot){ctx.save();ctx.translate(x,y);ctx.rotate(rot);ctx.shadowColor='rgba(40,30,20,.28)';ctx.shadowBlur=40;ctx.shadowOffsetY=14;
@@ -2308,7 +2329,7 @@ function init(){
   $('ttl').oninput=e=>{state.title=e.target.value.slice(0,60);schedule();};
   $('ttl').onkeydown=e=>{if(e.key==='Enter')e.target.blur();};
   $('plate').onchange=e=>{state.plate=e.target.value;schedule();};
-  $('png').onclick=()=>exportPNG(false);$('pngl').onclick=()=>exportPNG(true);$('svg').onclick=exportSVG;$('sw').onclick=exportSwatches;
+  $('png').onclick=()=>exportPNG(false);$('pngl').onclick=()=>exportPNG(true);$('svg').onclick=exportSVG;$('pngn').onclick=exportNumbers;$('sw').onclick=exportSwatches;
   $('canvas').onchange=e=>{state.canvas=e.target.value;schedule();};
   loadFavs();$('fav').onclick=toggleFav;$('gal').onclick=()=>openGal(false);$('ovx').onclick=closeGal;$('ov').onclick=e=>{if(e.target===$('ov'))closeGal();};
   $('tabx').onclick=()=>tab('x');$('tabf').onclick=()=>tab('f');$('tabp').onclick=()=>tab('p');$('shuf').onclick=shuffle;$('bkpdf').onclick=()=>runBook('pdf');$('bkzip').onclick=()=>runBook('zip');
@@ -2325,7 +2346,7 @@ function init(){
   $('toastx').onclick=hideToast;
   $('pkt').innerHTML=Object.entries(PACKS).map(([k,P])=>`<option value="${k}">${P.name}</option>`).join('');$('pks').value='pack-'+randomSeed().slice(0,4);
   for(const id of ['pkt','pkn','pkz','pkd','pkb','pks'])$(id).onchange=showPack;$('pkr').onclick=()=>{$('pks').value='pack-'+randomSeed().slice(0,4);showPack();};
-  $('pkpdf').onclick=packPDF;$('pkm').onclick=packMockups;$('pkc').onclick=async()=>{try{await navigator.clipboard.writeText($('pkx').value);$('pkst').textContent='Listing text copied.';}catch(e){$('pkx').select();$('pkst').textContent='Select all and copy.';}};
+  $('pkpdf').onclick=packPDF;$('pkl').onclick=packLayers;$('pkm').onclick=packMockups;$('pkc').onclick=async()=>{try{await navigator.clipboard.writeText($('pkx').value);$('pkst').textContent='Listing text copied.';}catch(e){$('pkx').select();$('pkst').textContent='Select all and copy.';}};
   $('dl').onclick=()=>exportPNG(false);
   if(TOUCH&&navigator.canShare){$('share').hidden=false;$('dl').hidden=true;$('share').onclick=()=>exportPNG(!state.fill);}
   document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(!$('ov').hidden)closeGal();else if(document.body.classList.contains('open'))sheet(false);});
